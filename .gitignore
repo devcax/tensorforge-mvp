@@ -9,3 +9,4 @@ __pycache__/
 tests/
 tensorforge/
 demo/
+requirements-dev.txt
