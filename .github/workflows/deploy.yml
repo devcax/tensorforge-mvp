@@ -38,7 +38,7 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           WORK_DIR: ${{ secrets.WORK_DIR }}
-          ENV_VAR: ${{ secrets.ENV_VAR }}
+          ENV_VAR: ${{ vars.ENV_VAR }}
         run: bash .github/scripts/deploy.sh check-settings
 
       - name: Set up QEMU
@@ -78,7 +78,7 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           WORK_DIR: ${{ secrets.WORK_DIR }}
-          ENV_VAR: ${{ secrets.ENV_VAR }}
+          ENV_VAR: ${{ vars.ENV_VAR }}
         run: bash .github/scripts/deploy.sh deploy
 
       - name: Remove SSH key

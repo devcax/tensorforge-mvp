@@ -17,12 +17,16 @@ ssh_run() {
 case "${1:-}" in
   check-settings)
     stage="settings validation"
-    for name in TS_AUTHKEY SSH_PRIVATE_KEY SSH_USER SSH_HOST WORK_DIR PORT ENV_VAR; do
+    for name in TS_AUTHKEY SSH_PRIVATE_KEY SSH_USER SSH_HOST WORK_DIR PORT; do
       if [ -z "${!name:-}" ]; then
         printf '::error::Missing secret %s in environment ENV or repository settings.\n' "$name" >&2
         exit 1
       fi
     done
+    if [ -z "${ENV_VAR:-}" ]; then
+      echo "::error::Missing variable ENV_VAR in environment ENV or repository variables." >&2
+      exit 1
+    fi
     if [[ ! "$PORT" =~ ^[0-9]{1,5}$ ]] || (( 10#$PORT < 1 || 10#$PORT > 65535 )); then
       echo "::error::PORT must be an SSH port between 1 and 65535." >&2
       exit 1
