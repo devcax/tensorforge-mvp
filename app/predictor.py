@@ -1,6 +1,7 @@
 import json
 import logging
 import threading
+from pathlib import Path
 
 import joblib
 import numpy as np
@@ -8,16 +9,14 @@ import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from .config import (
-    CATEGORY_TRANSFORMER_DIR,
     INFERENCE_BATCH_SIZE,
     MAX_TOKENS,
-    MODELS_DIR,
     TORCH_THREADS,
     URGENT_MODEL,
     URGENT_MODEL_CHOICES,
-    URGENT_TRANSFORMER_DIR,
     USE_QUANTIZATION,
 )
+from .model_download import resolve_models_dir
 from .preprocessing import (
     build_classic_input,
     build_clean_transformer_input,
@@ -55,8 +54,8 @@ def quantize_if_enabled(model):
 
 
 def load_transformer(model_dir):
-    tokenizer = AutoTokenizer.from_pretrained(str(model_dir))
-    model = AutoModelForSequenceClassification.from_pretrained(str(model_dir), dtype=torch.float32)
+    tokenizer = AutoTokenizer.from_pretrained(str(model_dir), local_files_only=True)
+    model = AutoModelForSequenceClassification.from_pretrained(str(model_dir), dtype=torch.float32, local_files_only=True)
     model.eval()
     return tokenizer, quantize_if_enabled(model)
 
@@ -68,20 +67,23 @@ def softmax_rows(scores):
 
 
 class TicketPredictor:
-    def __init__(self, model_version):
+    def __init__(self, model_version, models_dir=None):
+        self.models_dir = Path(models_dir) if models_dir is not None else resolve_models_dir()
+        self.category_transformer_dir = self.models_dir / "xlmr_category"
+        self.urgent_transformer_dir = self.models_dir / "xlmr_urgent"
         torch.set_num_threads(TORCH_THREADS)
         self.model_version = model_version
         self.tokenizer_lock = threading.Lock()
-        self.secondary_model = joblib.load(MODELS_DIR / "secondary_category_model.joblib")
-        self.urgent_model = joblib.load(MODELS_DIR / "is_urgent_model.joblib")
-        self.filler_sentences = joblib.load(MODELS_DIR / "filler_sentences.joblib")
-        self.text_choice = joblib.load(MODELS_DIR / "text_choice.joblib")
+        self.secondary_model = joblib.load(self.models_dir / "secondary_category_model.joblib")
+        self.urgent_model = joblib.load(self.models_dir / "is_urgent_model.joblib")
+        self.filler_sentences = joblib.load(self.models_dir / "filler_sentences.joblib")
+        self.text_choice = joblib.load(self.models_dir / "text_choice.joblib")
         self.language_detector = self.load_language_detector()
-        self.uses_transformer = CATEGORY_TRANSFORMER_DIR.exists()
+        self.uses_transformer = self.category_transformer_dir.exists()
         if self.uses_transformer:
             self.load_category_transformer()
         else:
-            self.classic_category_model = joblib.load(MODELS_DIR / "category_model.joblib")
+            self.classic_category_model = joblib.load(self.models_dir / "category_model.joblib")
         self.urgent_mode = self.choose_urgent_mode()
         if self.urgent_mode != "scratch":
             self.load_urgent_transformer()
@@ -91,13 +93,13 @@ class TicketPredictor:
         requested_mode = URGENT_MODEL if URGENT_MODEL in URGENT_MODEL_CHOICES else "ensemble"
         if requested_mode != URGENT_MODEL:
             logger.warning("unknown URGENT_MODEL '%s', using ensemble", URGENT_MODEL)
-        if requested_mode != "scratch" and not URGENT_TRANSFORMER_DIR.exists():
-            logger.warning("%s is missing, using the from-scratch urgency model", URGENT_TRANSFORMER_DIR)
+        if requested_mode != "scratch" and not self.urgent_transformer_dir.exists():
+            logger.warning("%s is missing, using the from-scratch urgency model", self.urgent_transformer_dir)
             return "scratch"
         return requested_mode
 
     def load_language_detector(self):
-        for model_dir in (CATEGORY_TRANSFORMER_DIR, URGENT_TRANSFORMER_DIR):
+        for model_dir in (self.category_transformer_dir, self.urgent_transformer_dir):
             detector_path = model_dir / "language_detector.joblib"
             if detector_path.exists():
                 logger.info("language detector loaded from %s", model_dir.name)
@@ -105,14 +107,14 @@ class TicketPredictor:
         return None
 
     def load_category_transformer(self):
-        self.tokenizer, self.category_model = load_transformer(CATEGORY_TRANSFORMER_DIR)
+        self.tokenizer, self.category_model = load_transformer(self.category_transformer_dir)
         self.id_to_label = {int(index): label for index, label in self.category_model.config.id2label.items()}
-        self.temperature = read_json_setting(CATEGORY_TRANSFORMER_DIR / "calibration.json", "temperature", 1.0)
+        self.temperature = read_json_setting(self.category_transformer_dir / "calibration.json", "temperature", 1.0)
         logger.info("category transformer loaded, temperature %.3f", self.temperature)
 
     def load_urgent_transformer(self):
-        self.urgent_tokenizer, self.urgent_transformer = load_transformer(URGENT_TRANSFORMER_DIR)
-        urgency_settings = read_json_settings(URGENT_TRANSFORMER_DIR / "urgency.json")
+        self.urgent_tokenizer, self.urgent_transformer = load_transformer(self.urgent_transformer_dir)
+        urgency_settings = read_json_settings(self.urgent_transformer_dir / "urgency.json")
         self.urgent_threshold = float(urgency_settings.get("threshold", 0.5))
         self.blend_threshold = float(urgency_settings.get("blend_threshold", self.urgent_threshold))
         self.urgent_input_variant = urgency_settings.get("input", "raw")
