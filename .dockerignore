@@ -1,0 +1,17 @@
+data/
+models/
+.venv/
+.env
+.env.*
+!.env.example
+.agents/
+.codex/
+.aws/
+__pycache__/
+*.pyc
+.git/
+scripts/
+tests/
+tensorforge/
+validation.csv
+check_secondary.py

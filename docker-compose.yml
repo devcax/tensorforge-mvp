@@ -1,0 +1,54 @@
+services:
+  api:
+    build: .
+    image: tensorforge-api:latest
+    container_name: tensorforge-api
+    restart: unless-stopped
+    environment:
+      API_KEY: ${API_KEY:?Set API_KEY in the .env file}
+      TORCH_THREADS: ${TORCH_THREADS:-2}
+      HUMAN_REVIEW_THRESHOLD: ${HUMAN_REVIEW_THRESHOLD:-0.5}
+      URGENT_MODEL: ${URGENT_MODEL:-ensemble}
+      USE_QUANTIZATION: ${USE_QUANTIZATION:-0}
+      HF_MODEL_REPO: ${HF_MODEL_REPO:?Set HF_MODEL_REPO in the .env file}
+      HF_MODEL_REVISION: ${HF_MODEL_REVISION:-main}
+      HF_TOKEN: ${HF_TOKEN:-}
+      FORWARDED_ALLOW_IPS: "*"
+    volumes:
+      - job_data:/service/data
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 1800s
+
+  caddy:
+    image: caddy:2
+    container_name: tensorforge-caddy
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in the .env file}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  job_data:
+  caddy_data:
+  caddy_config:
