@@ -75,5 +75,5 @@ docker compose logs -f api
 Wait for the models to download and load, then open [localhost:8000/demo](http://localhost:8000/demo).
 `GET /health` returns `200` when ready. Downloaded models and batch jobs persist in the data volume.
 
-On a remote server, open `http://YOUR_SERVER:8000/demo`. Docker exposes the API directly
-on port 8000 over HTTP.
+The API binds to `127.0.0.1:8000` on the host. For remote access, configure your own proxy
+to forward requests to that address.

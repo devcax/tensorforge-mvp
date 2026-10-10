@@ -12,11 +12,10 @@ services:
       USE_QUANTIZATION: ${USE_QUANTIZATION:-0}
       HF_MODEL_REPO: ${HF_MODEL_REPO:?Set HF_MODEL_REPO in the .env file}
       HF_MODEL_REVISION: ${HF_MODEL_REVISION:-main}
-      HF_TOKEN: ${HF_TOKEN:-}
     volumes:
       - job_data:/service/data
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     healthcheck:
       test:
         [
