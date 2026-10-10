@@ -11,7 +11,6 @@ RUN pip install --no-cache-dir torch==2.11.0 --index-url https://download.pytorc
  && pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
-COPY demo ./demo
 RUN useradd --create-home --uid 10001 appuser \
  && mkdir -p /service/data \
  && chown appuser:appuser /service/data

@@ -502,7 +502,8 @@ def build_demo():
                             )
                             gr.DownloadButton(
                                 label="Download Sample Template",
-                                value=str(SAMPLE_CSV),
+                                value=str(SAMPLE_CSV) if SAMPLE_CSV.is_file() else None,
+                                visible=SAMPLE_CSV.is_file(),
                                 size="sm",
                                 variant="secondary",
                             )
