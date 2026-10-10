@@ -68,20 +68,12 @@ Edit `.env`: set `API_KEY` to your own secret value and keep the Hugging Face se
 Build and start the API:
 
 ```bash
-docker compose up --build -d api
+docker compose up --build -d --remove-orphans
 docker compose logs -f api
 ```
 
 Wait for the models to download and load, then open [localhost:8000/demo](http://localhost:8000/demo).
 `GET /health` returns `200` when ready. Downloaded models and batch jobs persist in the data volume.
 
-### Deploy with HTTPS
-
-Set `DOMAIN` in `.env` to your own hostname, point its DNS record to your server, and make
-ports 80 and 443 reachable. Start both the API and Caddy:
-
-```bash
-docker compose up --build -d
-```
-
-Open `https://YOUR_DOMAIN/demo`. Caddy manages HTTPS and forwards requests to the API.
+On a remote server, open `http://YOUR_SERVER:8000/demo`. Docker exposes the API directly
+on port 8000 over HTTP.
