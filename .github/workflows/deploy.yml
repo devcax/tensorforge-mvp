@@ -34,7 +34,9 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           WORK_DIR: ${{ secrets.WORK_DIR }}
+          PORT: ${{ secrets.PORT }}
           ENV_VAR: ${{ vars.ENV_VAR }}
+
         run: |
           set -euo pipefail
           for name in TS_AUTHKEY SSH_PRIVATE_KEY SSH_USER SSH_HOST WORK_DIR ENV_VAR; do
@@ -84,7 +86,7 @@ jobs:
           chmod 700 ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -T 20 -p 2003 -H "$SSH_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -T 20 -p "$PORT" -H "$SSH_HOST" > ~/.ssh/known_hosts 2>/dev/null
           test -s ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
@@ -101,7 +103,7 @@ jobs:
           ssh_run() {
             local remote_command
             remote_command="$(python3 -c 'import shlex, sys; print(shlex.join(sys.argv[1:]))' "$@")"
-            ssh -p 2003 -i ~/.ssh/id_ed25519 \
+            ssh -p "$PORT" -i ~/.ssh/id_ed25519 \
               -o BatchMode=yes -o StrictHostKeyChecking=yes \
               -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=20 \
               "$SSH_USER@$SSH_HOST" "$remote_command"
