@@ -250,6 +250,7 @@ import gradio as gr
 from .demo import DEMO_CSS, build_demo, build_theme
 
 app = gr.mount_gradio_app(
-    app, build_demo(), path="/demo", theme=build_theme(), css=DEMO_CSS,
+    app, build_demo(), path="/", theme=build_theme(), css=DEMO_CSS,
+    app_kwargs={"exception_handlers": {StarletteHTTPException: handle_http_error}},
     footer_links=[], run_history=False, show_error=False,
 )

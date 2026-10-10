@@ -2,7 +2,7 @@
 
 Classifies support tickets by category and urgency, and routes them to the appropriate team.
 
-**Demo:** [tensorforge.devcax.com/demo](https://tensorforge.devcax.com/demo)
+**Demo:** [tensorforge.devcax.com](https://tensorforge.devcax.com/)
 
 ## Models
 
@@ -72,7 +72,7 @@ docker compose up --build -d --remove-orphans
 docker compose logs -f api
 ```
 
-Wait for the models to download and load, then open [localhost:8000/demo](http://localhost:8000/demo).
+Wait for the models to download and load, then open [localhost:8000](http://localhost:8000/).
 `GET /health` returns `200` when ready. Downloaded models and batch jobs persist in the data volume.
 
 The API binds to `127.0.0.1:8000` on the host. For remote access, configure your own proxy
