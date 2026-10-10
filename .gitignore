@@ -10,3 +10,5 @@ tests/
 tensorforge/
 demo/
 requirements-dev.txt
+out-100.json
+predict-batch-100.json

@@ -4,9 +4,6 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODELS_DIR = Path(os.getenv("MODELS_DIR", str(BASE_DIR / "models")))
 DATA_DIR = Path(os.getenv("DATA_DIR", str(BASE_DIR / "data")))
-HF_MODEL_REPO = os.getenv("HF_MODEL_REPO", "").strip()
-HF_MODEL_REVISION = os.getenv("HF_MODEL_REVISION", "main").strip() or "main"
-HF_MODEL_CACHE_DIR = Path(os.getenv("HF_MODEL_CACHE_DIR", str(DATA_DIR / "huggingface")))
 CATEGORY_TRANSFORMER_DIR = MODELS_DIR / "xlmr_category"
 URGENT_TRANSFORMER_DIR = MODELS_DIR / "xlmr_urgent"
 MODEL_VERSION_FILE = MODELS_DIR / "MODEL_VERSION"
@@ -18,6 +15,7 @@ URGENT_MODEL = os.getenv("URGENT_MODEL", "ensemble").strip().lower()
 URGENT_MODEL_CHOICES = ("scratch", "transformer", "ensemble")
 HUMAN_REVIEW_THRESHOLD = float(os.getenv("HUMAN_REVIEW_THRESHOLD", "0.5"))
 MAX_TOKENS = 384
+INFERENCE_BATCH_SIZE = int(os.getenv("INFERENCE_BATCH_SIZE", "16"))
 JOB_CHUNK_SIZE = 25
 MODEL_WAIT_SECONDS = 90
 
